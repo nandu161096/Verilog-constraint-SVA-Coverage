@@ -1,0 +1,51 @@
+
+/*
+module tb();
+  time t1, t2;
+  randomize r = new();
+  logic clk;
+  initial begin 
+    clk = 0;
+  end
+  always #5 clk = ~clk;
+  
+  
+  property clock_period_10ns;
+    @(posedge clk)
+    (t1 = $time) |=> (t2 = $time) and ((t2-t1) == 10);
+  endproperty
+  
+  assert property (clock_period_10ns)
+    $info("clock good") 
+    else 
+      $error("clock bad");
+    
+endmodule*/
+module tb;
+  timeunit 1ns;
+  timeprecision 1ns;
+
+  time t1, t2;
+  logic clk;
+
+  initial clk = 0;
+  always #5 clk = ~clk;   // 10 ns period
+
+  // Sample times procedurally (portable)
+  always @(posedge clk) begin
+    t2 = t1;
+    t1 = $time;
+  end
+
+  // Assertion: check period
+  property clock_period_10ns;
+    @(posedge clk)
+    (t1 - t2) == 10;
+  endproperty
+
+  assert property (clock_period_10ns)
+    $info("clock good");
+  else
+    $error("clock bad");
+
+endmodule
