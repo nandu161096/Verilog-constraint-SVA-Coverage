@@ -1,0 +1,28 @@
+// Code your testbench here
+// or browse Examples
+
+class randomize;
+  rand int num;
+  static bit toggle;
+  
+  constraint c1 {
+    num inside {[0:100]};
+    (toggle == 0) -> (num %2 == 0);
+    (toggle == 1) -> (num %2 != 0);
+  }
+  
+  function void post_randomize();
+    toggle = ~toggle;
+  endfunction
+endclass
+
+module tb();
+  randomize r = new();
+  initial begin
+    r.toggle = 0;
+    repeat(10) begin
+      r.randomize();
+      $display("num %d\n",r.num);
+    end
+  end
+endmodule
