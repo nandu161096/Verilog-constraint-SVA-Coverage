@@ -1,0 +1,23 @@
+// Code your testbench here
+// or browse Examples
+
+class randomize;
+  rand int num;
+  
+  constraint c1 {
+    num dist {
+      [1:10] := 70,
+      [11:30] := 30
+    };
+  }
+endclass
+
+module tb();
+  randomize r = new();
+  initial begin
+    repeat(10) begin
+      r.randomize();
+      $display("num %d",r.num);
+    end
+  end
+endmodule
