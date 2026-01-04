@@ -1,0 +1,20 @@
+
+class randomize;
+  rand int num[5];
+  
+  constraint c1 {
+    foreach (num[i])
+      num[i] inside {[1:10]};
+    unique{num};
+  }
+endclass
+
+module tb();
+  randomize r = new();
+  initial begin
+    repeat(10) begin
+      r.randomize();
+      $display("num %p",r.num);
+    end
+  end
+endmodule
