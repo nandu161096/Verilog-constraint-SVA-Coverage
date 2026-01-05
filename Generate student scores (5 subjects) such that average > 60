@@ -1,0 +1,23 @@
+
+
+class sub_sum;
+  rand int sum[5];
+  
+  constraint c_range {
+    foreach (sum[i])
+      sum[i] inside {[0:100]};
+  }
+  constraint c_avg {
+    sum.sum() > 300;   // ensures average > 60
+  }
+  
+endclass
+
+module tb;
+  sub_sum d = new();
+  
+  initial begin
+    d.randomize();
+    $display("Mark = %p", d.sum);
+  end
+endmodule
