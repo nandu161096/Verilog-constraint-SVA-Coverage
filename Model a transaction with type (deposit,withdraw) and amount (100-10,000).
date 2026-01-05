@@ -1,0 +1,28 @@
+
+
+
+typedef enum {DEPOSIT, WITHDRAW} trans_type;
+
+class trans_con;
+  rand trans_type trans;
+  rand int amount;
+  
+  constraint c_1{
+    amount inside {[100:10000]};
+  }
+  
+  constraint c_2{
+    trans inside {DEPOSIT, WITHDRAW};
+  }
+endclass
+
+module tb;
+  trans_con d = new();
+  
+  initial begin
+    repeat(5) begin
+      d.randomize();
+      $display("type = %d amount %d", d.trans, d.amount);
+    end
+  end
+endmodule
