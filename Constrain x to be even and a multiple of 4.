@@ -1,0 +1,20 @@
+
+class randomizer;
+  rand int num;
+  constraint c1 {
+    num inside {[1:100]};
+    num%2 == 0;
+    num%4 == 0;
+  }
+  
+endclass
+
+module tb();
+  randomizer r =  new();
+  initial begin
+    repeat(5) begin
+    r.randomize();
+    $display("num %d",r.num);
+    end
+  end
+endmodule
