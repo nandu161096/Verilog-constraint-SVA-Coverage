@@ -1,0 +1,21 @@
+
+
+
+class randomizer;
+  rand int num[3][3][3];
+
+  constraint c1 {
+    foreach (num[i,j,k])
+      num[i][j][k] inside {[-10:10]};
+  }
+endclass
+
+module tb;
+  randomizer r = new();
+  initial begin
+    repeat (5) begin
+      assert(r.randomize());
+      $display("num = %p", r.num);
+    end
+  end
+endmodule
