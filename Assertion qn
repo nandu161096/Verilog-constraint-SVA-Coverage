@@ -1,0 +1,229 @@
+Assert that req is followed by ack within 3 cycles.
+
+property req_follow_ack;
+@(posedge clk)
+req |-> ##[1:3] ack;
+endproperty
+
+assert property (req_follow_ack);
+
+Ensure reset is deasserted within 5 cycles of power-up.
+
+property rst_deass;
+@(posedge clk)
+ $rose(pwr) |-> ##[1:5] !rst;
+endproperty
+assert property (rst_deass);
+
+Assert that wvalid stays high for at most 2 cycles without wready.
+
+property wvalid_max_wait;
+  @(posedge clk)
+  (wvalid && !wready) [*3] |-> wready; 
+endproperty
+
+If you want to ensure wready comes within 2 cycles of wvalid going high:
+
+property wready_timeout;
+  @(posedge clk)
+  $rose(wvalid) |-> ##[0:2] wready;
+endproperty
+
+Ensure FIFO never underflows (read without empty).
+
+property fifo_uf;
+@(posedge clk)
+fifo_empty |-> !rd_en;
+endproperty 
+assert property (fifo_uf) $info("pass") else $error("fail");
+
+property fifo_uf;
+  @(posedge clk)
+  disable iff (rst) // Prevents false failures during reset
+  fifo_empty |-> !rd_en;
+endproperty 
+
+
+Assert that no transaction occurs during reset
+
+property no_trans;
+@(posedge clk)
+rst |-> !trans;
+endproperty
+assert property (no_trans) $info("pass") else $error("fail");
+
+Assert burst transfers complete with burst_len cycles.
+
+property burst_comp;
+@(posedge clk)
+start |-> ##burst_len done;
+endproperty
+
+assert property (burst_comp) $info("pass") else $error("fail");
+
+Check that write happens only when enable is high. 
+
+property wr_check;
+@(posedge clk)
+wr |-> en;
+endproperty
+assert property (wr_check) $info("pass") else $error("fail");
+
+Assert a transaction ID is not repeated consecutively.
+
+property trans_id;
+@(posedge clk)
+disable iff (!rst)
+txn_valid && $past(txn_valid) |-> (txn_id != $past(txn_id));
+endproperty
+
+assert property (trans_id) $info("pass") else $error("fail");
+
+property no_consecutive_same_id;
+    @(posedge clk)
+    (valid && ready) && $past(valid && ready)
+        |-> (id != $past(id));
+endproperty
+
+Ensure address in a write is aligned (addr % 4 == 0). 
+
+
+property aligned_addr_wr;
+@(posedge clk)
+wr |-> (addr%4==0);
+endproperty
+assert property (aligned_addr_wr) $info("pass") else $error("fail");
+
+property aligned_addr_wr;
+    @(posedge clk)
+    wr |-> (addr[1:0] == 2'b00);
+endproperty
+
+ Assert signal done is only asserted after start.
+ 
+property done_start;
+     @(posedge clk) 
+	 disable iff (!rst)
+	 $rose(start) |-> $rose(done);
+endproperty
+ 
+ wrong 
+ 
+property done_start;
+     @(posedge clk) 
+	 disable iff (!rst)
+	 $rose(done) |-> $past(start, 1, 1);
+endproperty
+assert property (done_start) $info("pass") else $error("fail");
+
+
+
+property arvalid_ready;
+@(posedge clk)
+arvalid |-> ##[1:5] arready 
+endproperty
+assert property (arvalid_ready) $info("pass") else $error("fail");
+
+ Check arvalid is followed by arready within 5 cycles. 
+ 
+ 
+ property clk_freq;
+ 
+ endproperty
+ assert property (clk_freq) $info("pass") else $error("fail");
+
+wrong 
+property no_clock_skip;
+    @(posedge clk) disable iff (!rst)
+    ##1 !$rose(clk); // clk should not rise again in the same cycle
+endproperty
+
+assert property (no_clock_skip) $info("Clock okay") else $error("Clock edges too close");
+
+  Assert that clock frequency doesn’t skip (no 2 rising edges too close). 
+  
+  
+  property packet_size;
+  @(posedge clk) disable iff (!rst)
+  ##0 (curr_size < max);
+  endproperty
+  assert property (packet_size) $info("pass") else $error("Fail");
+  
+  Check that packet size is always less than max allowed size.
+
+property (grant_sig);
+@(posedge clk) disable iff (!rst)
+!(grant [*11]);
+endproperty
+   
+assert property (grant_sig) $info("pass") else $error("Fail");
+  
+Ensure grant signal is not active for more than 10 cycles. 
+
+property temp_check;
+@(posedge clk) disable iff (!rst)
+##0 (temp < 120);
+endproperty
+
+assert property (temp_check) $info("pass") else $error("Fail");
+
+ Assert temperature never exceeds 120°C. 
+ 
+ 
+property data_valid_ready;
+@(posedge clk) disable iff (!rst)
+data_valid |-> data_ready; // combination 
+endproperty
+
+assert property (data_valid_ready) $info("pass") else $error("Fail");
+
+Ensure data_valid is only high when data_ready is also high. 
+
+
+property valid_hs;
+@(posedge clk) disable iff (!rst)
+data |-> $past(handshake,1,1);
+endproperty
+assert property (valid_hs) $info("pass") else $error("Fail");
+
+wrong 
+
+logic hs_done;
+
+always_ff @(posedge clk or negedge rst) begin
+  if (!rst) hs_done <= 0;
+  else if (handshake) hs_done <= 1;
+end
+
+property data_after_hs;
+  @(posedge clk) disable iff (!rst)
+  (data != 0) |-> hs_done;
+endproperty
+
+Assert a valid handshake occurs before any data is transferred. 
+
+property sig_toggle;
+  @(posedge clk) disable iff (!rst)
+  toggle != $past(toggle,20);
+endproperty
+
+assert property (sig_toggle) $info("pass") else $error("Fail");
+
+Check that a signal toggles at least once every 20 cycles.
+
+property valid_high;
+@(posedge clk) disable iff (!rst)
+valid |-> ready;
+endproperty
+assert property (valid_high) $info("pass") else $error("Fail");
+
+Ensure no packet is dropped (valid & !ready case).
+
+property fsm_state;
+@(posedge clk) disable iff (!rst)
+(fsm != INVALID && fsm != UNDEF);
+endproperty
+
+assert property (fsm_state) $info("pass") else $error("Fail");
+
+Check that fsm never enters an invalid or undefined state. 
