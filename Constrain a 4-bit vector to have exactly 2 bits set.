@@ -1,0 +1,19 @@
+class bit_con;
+  rand bit [3:0] a;
+  
+  constraint c_1 {
+    a.countones() == 2;
+  }
+ 
+endclass
+
+module tb;
+  bit_con d = new();
+  
+  initial begin
+    repeat(5) begin
+      d.randomize();
+      $display("a = %b", d.a);
+    end
+  end
+endmodule
