@@ -1,0 +1,21 @@
+
+
+class dice_con;
+  rand int dice;
+  
+  constraint c_1{
+    dice inside {[1:6]};
+  }
+  
+endclass
+
+module tb;
+  dice_con d = new();
+  
+  initial begin
+    repeat(5) begin
+      d.randomize();
+      $display("Dice = %d", d.dice);
+    end
+  end
+endmodule
