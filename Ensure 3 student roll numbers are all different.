@@ -1,0 +1,22 @@
+
+
+
+class bit_con;
+  rand int a,b,c;
+  
+  constraint c_1 {
+     (a != b) && (a != c) && (b != c);
+  }
+ 
+endclass
+
+module tb;
+  bit_con d = new();
+  
+  initial begin
+    repeat(5) begin
+      d.randomize();
+      $display("a = %b b %b c %b", d.a,d.b,d.c);
+    end
+  end
+endmodule
