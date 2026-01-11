@@ -1,0 +1,85 @@
+// Code your testbench here
+// or browse Examples
+`include "uvm_macros.svh"
+import uvm_pkg::*;
+
+class producer extends uvm_component;
+  `uvm_component_utils(producer)
+  uvm_get_imp#(int, producer) prod_get;
+  
+  function new(string name = "producer", uvm_component parent = null);
+    super.new(name, parent);
+    prod_get = new("prod_get",this);
+  endfunction
+         
+  virtual task get(output int val);
+    val = 10;
+    `uvm_info(get_type_name(), $sformatf("Send value hjh = %0h", val), UVM_NONE);
+  endtask
+
+endclass
+
+class consumer extends uvm_component;
+  `uvm_component_utils(consumer)
+  uvm_get_port#(int) cons_get;
+  
+  function new(string name = "consumer", uvm_component parent = null);
+    super.new(name, parent);
+    cons_get = new("cons_get", this);
+  endfunction
+
+    task run_phase(uvm_phase phase);
+      int value;
+    super.run_phase(phase);
+    cons_get.get(value);
+      `uvm_info(get_type_name(), $sformatf("Received value = %0h", value), UVM_NONE);
+  endtask
+endclass
+
+class env extends uvm_env;
+  `uvm_component_utils(env)
+  producer p;
+  consumer c;
+  
+    function new(string name = "env", uvm_component parent = null);
+    super.new(name, parent);
+  endfunction
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+p = producer::type_id::create("p", this);
+c = consumer::type_id::create("c", this);
+  endfunction
+  
+  function void connect_phase(uvm_phase phase);
+     super.connect_phase(phase);
+    c.cons_get.connect(p.prod_get);
+  endfunction
+endclass
+
+class test extends uvm_test;
+    `uvm_component_utils(test)
+  env e;
+  
+      function new(string name = "test", uvm_component parent = null);
+    super.new(name, parent);
+  endfunction
+  
+   function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+     e = env::type_id::create("e", this);
+  endfunction
+  
+
+  task run_phase(uvm_phase phase);
+    phase.raise_objection(this);
+    #400;
+    phase.drop_objection(this);
+  endtask
+endclass
+
+module tb;
+  initial begin
+    run_test("test");
+  end
+  
+endmodule
