@@ -1,0 +1,111 @@
+// Code your testbench here
+// or browse Examples
+`include "uvm_macros.svh"
+import uvm_pkg::*;
+
+class seq_item extends uvm_sequence_item;
+  `uvm_object_utils(seq_item)
+    rand bit [3:0] value;
+
+  function new(string name = "seq_item");
+    super.new(name);
+  endfunction
+    constraint val_c {value > 0;}
+
+endclass
+
+class producer extends uvm_component;
+  `uvm_component_utils(producer)
+  seq_item seq;
+  uvm_analysis_port#(seq_item) prod_ana;
+  
+  function new(string name = "producer", uvm_component parent = null);
+    super.new(name, parent);
+    prod_ana = new("prod_ana",this);
+  endfunction
+
+  task run_phase(uvm_phase phase);
+    super.run_phase(phase);
+    seq = seq_item::type_id::create("seq_item");
+    seq.randomize();
+    prod_ana.write(seq);
+  endtask
+endclass
+
+class consumerA extends uvm_component;
+  `uvm_component_utils(consumerA)
+  uvm_analysis_imp#(seq_item, consumerA) consa;
+  
+  function new(string name = "consumer", uvm_component parent = null);
+    super.new(name, parent);
+    consa = new("consa", this);
+  endfunction
+
+  virtual function void write(seq_item req);
+    `uvm_info(get_type_name(), $sformatf("Received value = %0h", req.value), UVM_NONE);
+  endfunction
+endclass
+
+class consumerB extends uvm_component;
+  `uvm_component_utils(consumerB)
+  uvm_analysis_imp#(seq_item, consumerB) consb;
+  
+  function new(string name = "consumer", uvm_component parent = null);
+    super.new(name, parent);
+    consb = new("consb", this);
+  endfunction
+
+  virtual function void write(seq_item req);
+    `uvm_info(get_type_name(), $sformatf("Received value = %0h", req.value), UVM_NONE);
+  endfunction
+endclass
+
+class env extends uvm_env;
+  `uvm_component_utils(env)
+  producer p;
+  consumerA ca;
+  consumerB cb;
+    function new(string name = "env", uvm_component parent = null);
+    super.new(name, parent);
+  endfunction
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+p = producer::type_id::create("p", this);
+ca = consumerA::type_id::create("ca", this);
+    cb = consumerB::type_id::create("cb", this);
+  endfunction
+  
+  function void connect_phase(uvm_phase phase);
+     super.connect_phase(phase);
+    p.prod_ana.connect(ca.consa);
+    p.prod_ana.connect(cb.consb);
+  endfunction
+endclass
+
+class test extends uvm_test;
+    `uvm_component_utils(test)
+  env e;
+  
+      function new(string name = "test", uvm_component parent = null);
+    super.new(name, parent);
+  endfunction
+  
+   function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+     e = env::type_id::create("e", this);
+  endfunction
+  
+
+  task run_phase(uvm_phase phase);
+    phase.raise_objection(this);
+    #400;
+    phase.drop_objection(this);
+  endtask
+endclass
+
+module tb;
+  initial begin
+    run_test("test");
+  end
+  
+endmodule
